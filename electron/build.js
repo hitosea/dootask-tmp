@@ -155,8 +155,9 @@ function androidUpload(url) {
                                 uploadOras[filename] = ora(`Upload [0%] ${filename}`).start()
                             },
                             retryNumber: 3
-                        }).then(_ => {
+                        }).then(res => {
                             uploadOras[filename].succeed(`Upload [100%] ${filename}`)
+                            console.log(res);
                         }).catch(_ => {
                             uploadOras[filename].fail(`Upload [fail] ${filename}`)
                         })

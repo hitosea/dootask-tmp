@@ -37,7 +37,7 @@ jobs:
         run: |
           cd resources/mobile/platforms/android/eeuiApp
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --quiet
 
       - name: Upload File
         env:
