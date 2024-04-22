@@ -155,9 +155,20 @@ function androidUpload(url) {
                                 uploadOras[filename] = ora(`Upload [0%] ${filename}`).start()
                             },
                             retryNumber: 3
-                        }).then(res => {
+                        }).then(({status, data}) => {
+                            if (status !== 200) {
+                                uploadOras[filename].fail(`Upload [fail:${status}] ${filename}`)
+                                return
+                            }
+                            if (!utils.isJson(data)) {
+                                uploadOras[filename].fail(`Upload [fail:not json] ${filename}`)
+                                return
+                            }
+                            if (data.ret !== 1) {
+                                uploadOras[filename].fail(`Upload [fail:ret ${data.ret}] ${filename}`)
+                                return
+                            }
                             uploadOras[filename].succeed(`Upload [100%] ${filename}`)
-                            console.log(res);
                         }).catch(_ => {
                             uploadOras[filename].fail(`Upload [fail] ${filename}`)
                         })
@@ -229,7 +240,19 @@ function genericPublish({url, key, version, output}) {
                                 uploadOras[filename] = ora(`Upload [0%] ${filename}`).start()
                             },
                             retryNumber: 3
-                        }).then(_ => {
+                        }).then(({status, data}) => {
+                            if (status !== 200) {
+                                uploadOras[filename].fail(`Upload [fail:${status}] ${filename}`)
+                                return
+                            }
+                            if (!utils.isJson(data)) {
+                                uploadOras[filename].fail(`Upload [fail:not json] ${filename}`)
+                                return
+                            }
+                            if (data.ret !== 1) {
+                                uploadOras[filename].fail(`Upload [fail:ret ${data.ret}] ${filename}`)
+                                return
+                            }
                             uploadOras[filename].succeed(`Upload [100%] ${filename}`)
                         }).catch(_ => {
                             uploadOras[filename].fail(`Upload [fail] ${filename}`)

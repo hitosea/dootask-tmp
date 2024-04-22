@@ -36,7 +36,7 @@ jobs:
       - name: Build Android
         run: |
           cd resources/mobile/platforms/android/eeuiApp
-          chmod +x gradlew
+          chmod +x ./gradlew
           ./gradlew assembleRelease --quiet
 
       - name: Upload File
