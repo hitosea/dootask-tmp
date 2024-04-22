@@ -2,9 +2,8 @@ name: Publish Android
 
 on:
   push:
-    branches:
-      - 'pro'
-  pull_request:
+    tags:
+      - 'v*'
 
 jobs:
   Build:
@@ -12,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: build
 
+    if: startsWith(github.event.ref, 'refs/tags/v')
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -40,16 +40,16 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Upload File
+        env:
+          DP_KEY: ${{ secrets.DP_KEY }}
         run: |
-          cd resources/mobile/platforms/android/eeuiApp
-          ls app
-          ls app/build
-          ls app/build/outputs
-          ls app/build/outputs/apk
-          ls app/build/outputs/apk/release
+          node ./electron/build.js android-upload
 
       - name: Release
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         with:
           files: |
             resources/mobile/platforms/android/eeuiApp/app/build/outputs/apk/release/*.apk

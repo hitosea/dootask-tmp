@@ -1,4 +1,3 @@
-const os = require('os')
 const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path')
@@ -106,6 +105,64 @@ function axiosAutoTry(data) {
             reject(error)
         })
     })
+}
+
+/**
+ * 上传app应用
+ * @param url
+ */
+function androidUpload(url) {
+    if (DP_KEY) {
+        console.error("Missing Deploy Key or GitHub Token and Repository!");
+        process.exit()
+    }
+    let releaseSrcDir = path.resolve(__dirname, "../resources/mobile/platforms/android/eeuiApp/app/build/outputs/apk/release");
+    if (!fs.existsSync(releaseSrcDir)) {
+        console.error("Release not found");
+        process.exit()
+    }
+    fs.readdir(releaseSrcDir, async (err, files) => {
+        if (err) {
+            console.warn(err)
+        } else {
+            const uploadOras = {}
+            for (const filename of files) {
+                const localFile = path.join(filename, filename)
+                if (/\.apk$/.test(filename) && fs.existsSync(localFile)) {
+                    const fileStat = fs.statSync(localFile)
+                    if (fileStat.isFile()) {
+                        uploadOras[filename] = ora(`Upload [0%] ${filename}`).start()
+                        const formData = new FormData()
+                        formData.append("file", fs.createReadStream(localFile));
+                        await axiosAutoTry({
+                            axios: {
+                                method: 'post',
+                                url: url,
+                                data: formData,
+                                headers: {
+                                    'Publish-Key': DP_KEY,
+                                    'Content-Type': 'multipart/form-data;boundary=' + formData.getBoundary(),
+                                },
+                                onUploadProgress: progress => {
+                                    const complete = Math.min(99, Math.round(progress.loaded / progress.total * 100 | 0)) + '%'
+                                    uploadOras[filename].text = `Upload [${complete}] ${filename}`
+                                },
+                            },
+                            onRetry: _ => {
+                                uploadOras[filename].warn(`Upload [retry] ${filename}`)
+                                uploadOras[filename] = ora(`Upload [0%] ${filename}`).start()
+                            },
+                            retryNumber: 3
+                        }).then(_ => {
+                            uploadOras[filename].succeed(`Upload [100%] ${filename}`)
+                        }).catch(_ => {
+                            uploadOras[filename].fail(`Upload [fail] ${filename}`)
+                        })
+                    }
+                }
+            }
+        }
+    });
 }
 
 /**
@@ -341,6 +398,12 @@ if (["dev"].includes(argv[2])) {
             notarize: false,
         }
     }, false, false)
+} else if (["android-upload"].includes(argv[2])) {
+    config.app.forEach(({publish}) => {
+        if (publish.provider === 'generic') {
+            androidUpload(publish.url)
+        }
+    })
 } else if (["all", "win", "mac"].includes(argv[2])) {
     // 自动编译
     platforms.filter(p => {
