@@ -43,7 +43,7 @@ jobs:
         env:
           DP_KEY: ${{ secrets.DP_KEY }}
         run: |
-          ./cmd electron android-upload
+          node ./electron/build.js android-upload
 
       - name: Release
         uses: softprops/action-gh-release@v2
