@@ -1,0 +1,46 @@
+name: Publish Android
+
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+
+jobs:
+  Build:
+    name: Build Android
+    runs-on: ubuntu-latest
+    environment: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20.x
+
+      - name: Build Js
+        run: |
+          ./cmd appbuild
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+
+      - name: Build Android
+        run: |
+          git submodule update --quiet --init --depth=1
+          cd resources/mobile/platforms/android/eeuiApp
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Upload File
+        run: |
+          ls app
+          ls app/build
+          ls app/build/outputs
+          ls app/build/outputs/apk
+          ls app/build/outputs/apk/release
