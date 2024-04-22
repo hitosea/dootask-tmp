@@ -116,7 +116,7 @@ function androidUpload(url) {
         console.error("Missing Deploy Key or GitHub Token and Repository!");
         process.exit()
     }
-    const releaseDir = path.resolve(__dirname, "../resources/mobile/platforms/android/eeuiApp/app/build/outputs/apk/release");
+    const releaseDir = path.resolve(__dirname, "resources/mobile/platforms/android/eeuiApp/app/build/outputs/apk/release");
     if (!fs.existsSync(releaseDir)) {
         console.error("Release not found");
         process.exit()
