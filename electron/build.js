@@ -112,16 +112,16 @@ function axiosAutoTry(data) {
  * @param url
  */
 function androidUpload(url) {
-    if (DP_KEY) {
+    if (!DP_KEY) {
         console.error("Missing Deploy Key or GitHub Token and Repository!");
         process.exit()
     }
-    let releaseSrcDir = path.resolve(__dirname, "../resources/mobile/platforms/android/eeuiApp/app/build/outputs/apk/release");
-    if (!fs.existsSync(releaseSrcDir)) {
+    const releaseDir = path.resolve(__dirname, "../resources/mobile/platforms/android/eeuiApp/app/build/outputs/apk/release");
+    if (!fs.existsSync(releaseDir)) {
         console.error("Release not found");
         process.exit()
     }
-    fs.readdir(releaseSrcDir, async (err, files) => {
+    fs.readdir(releaseDir, async (err, files) => {
         if (err) {
             console.warn(err)
         } else {
@@ -134,12 +134,14 @@ function androidUpload(url) {
                         uploadOras[filename] = ora(`Upload [0%] ${filename}`).start()
                         const formData = new FormData()
                         formData.append("file", fs.createReadStream(localFile));
+                        formData.append("file_num", 1);
                         await axiosAutoTry({
                             axios: {
                                 method: 'post',
                                 url: url,
                                 data: formData,
                                 headers: {
+                                    'Publish-Version': config.version,
                                     'Publish-Key': DP_KEY,
                                     'Content-Type': 'multipart/form-data;boundary=' + formData.getBoundary(),
                                 },
